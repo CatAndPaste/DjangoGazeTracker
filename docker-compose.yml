@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  django_gaze_tracker:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=DjangoGazeTracker.settings
+    command: uvicorn DjangoGazeTracker.asgi:application --host 0.0.0.0 --port 8000

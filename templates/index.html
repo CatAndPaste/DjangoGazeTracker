@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Gaze Tracking</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #startButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #video {
+            display: none;
+        }
+
+        #processed-video {
+            width: 100%;
+            max-width: 1000px;
+            height: auto;
+            display: none;
+        }
+
+        #error-message {
+            color: red;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton" disabled>Включить камеру</button>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="processed-video" alt="processed video stream">
+    <div id="error-message"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startButton = document.getElementById('startButton');
+            startButton.disabled = true;
+
+            const video = document.getElementById('video');     // video element to capture frames from
+            const canvas = document.getElementById('canvas');   // canvas for putting frames into before sending to back
+            const context = canvas.getContext('2d');
+            const processedVideo = document.getElementById('processed-video');  // output for processed frames
+            const errorMessage = document.getElementById('error-message');      // in case camera is disabled
+
+            const targetHeight = 480;   // 480p by default, can be changed. Doesn't adapt to prevent errors on back
+            let targetWidth;
+            let quality = 0.5;          // default JPEG compression rate (50% of original image quality)
+            let processing = false;
+
+            const socket = new WebSocket('ws://' + window.location.host + '/ws/video/');
+
+            socket.onopen = () => {
+                startButton.disabled = false;
+            };
+
+            function processFrame() {
+                if (!processing) {
+                    processing = true;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = canvas.toDataURL('image/jpeg', quality);
+                    socket.send(JSON.stringify({ image: imageData }));
+                }
+                requestAnimationFrame(processFrame);
+            }
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                processedVideo.src = data.processed_image;
+                processedVideo.style.display = 'block';
+
+                const processingTime = data.processing_time * 1000;
+
+                // Adapt JPEG compression rate if processing takes too much time (from 30% to 100% of image quality)
+                if (processingTime > 100) {
+                    quality = Math.max(quality - 0.1, 0.3);
+                } else {
+                    quality = Math.min(quality + 0.1, 1.0);
+                }
+
+                processing = false;
+            };
+
+            startButton.addEventListener('click', () => {
+                startButton.style.display = 'none';
+
+                navigator.mediaDevices.getUserMedia({ video: { height: targetHeight } })
+                    .then((stream) => {
+                        errorMessage.textContent = '';
+                        video.srcObject = stream;
+                        video.play();
+
+                        video.onloadedmetadata = () => {
+                            targetWidth = targetHeight * (video.videoWidth / video.videoHeight);
+                            canvas.width = targetWidth;
+                            canvas.height = targetHeight;
+
+                            processFrame();
+                        };
+                    })
+                    .catch((err) => {
+                        console.error("Error accessing the camera: " + err);
+                        errorMessage.textContent = "Ошибка: доступ к камере запрещен или камера недоступна";
+                        startButton.style.display = 'block';
+                        startButton.disabled = false;
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
