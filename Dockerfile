@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     libfontconfig1 \
+    libgl1-mesa-glx \
     && apt-get clean
 
 COPY requirements.txt .
