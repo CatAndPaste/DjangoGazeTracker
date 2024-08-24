@@ -62,7 +62,7 @@
             let quality = 0.5;          // default JPEG compression rate (50% of original image quality)
             let processing = false;
 
-            const socket = new WebSocket('ws://' + window.location.host + '/ws/video/');
+            const socket = new WebSocket('wss://' + window.location.host + '/ws/video/');
 
             socket.onopen = () => {
                 startButton.disabled = false;

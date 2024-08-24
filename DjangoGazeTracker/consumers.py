@@ -16,8 +16,8 @@ class CameraConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gaze = GazeTracking()
-        self.font_large = ImageFont.truetype("arial.ttf", 24)
-        self.font_small = ImageFont.truetype("arial.ttf", 16)
+        self.font_large = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)
+        self.font_small = ImageFont.truetype("DejaVuSans.ttf", 16)
 
     async def connect(self):
         await self.accept()
