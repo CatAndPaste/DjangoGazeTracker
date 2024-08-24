@@ -26,7 +26,14 @@
 
 ### Docker
 
-Скопируйте проект на удалённый сервер и используйте из корневой директории проекта:
+Скопируйте проект на удалённый сервер:
+
+```
+git clone https://github.com/CatAndPaste/DjangoGazeTracker.git
+cd DjangoGazeTracker
+```
+
+И используйте из корневой директории проекта:
 
 ```
 docker-compose build
