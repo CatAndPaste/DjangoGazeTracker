@@ -4,6 +4,13 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     cmake \
+    g++ \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libgtk2.0-dev \
+    libboost-python-dev \
+    libboost-thread-dev \
     libsm6 \
     libxext6 \
     libxrender1 \
